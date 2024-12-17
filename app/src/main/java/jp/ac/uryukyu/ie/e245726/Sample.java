@@ -1,5 +1,7 @@
 package jp.ac.uryukyu.ie.e245726;
 
+import java.util.stream.IntStream;
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -15,20 +17,25 @@ public class Sample extends Application{
     }
 
     Button button;
+    Button button2;
+    String[] palamate = {"x","y","z"};
+
     
     @Override
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("Title of the Window");
 
-        button = new Button("click me");//ボタン
-        button.setOnAction(e -> System.out.println("hello"));
-
-
         StackPane layout = new StackPane();//レイアウト
-        layout.getChildren().add(button);
-        
 
-        Scene scene = new Scene(layout,300,250);//シーン
+        IntStream.range(0, palamate.length).forEach(i -> {
+            Button button = new Button();
+            button.setText(palamate[i]);
+            button.setOnAction(e -> System.out.println(palamate[i]));
+            button.setTranslateX(50*i);//ボタンをずらす
+            layout.getChildren().add(button);//ボタン
+        });
+
+        Scene scene = new Scene(layout,300,250);
         primaryStage.setScene(scene);
         primaryStage.show();
 
