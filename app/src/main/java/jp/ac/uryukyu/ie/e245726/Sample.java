@@ -21,8 +21,10 @@ public class Sample extends Application{
         primaryStage.setTitle("Title of the Window");
 
         button = new Button("click me");//ボタン
-        button.setOnAction(e -> AlertBox.display("Title of window", "Wow this alert box is awsome"));
-
+        button.setOnAction(e -> {
+            boolean result =ConfirmBox.display("title of window", "are you sure sou want to send pic?");
+            System.out.println(result);
+        });
 
         StackPane layout = new StackPane();//レイアウト
         layout.getChildren().add(button);
