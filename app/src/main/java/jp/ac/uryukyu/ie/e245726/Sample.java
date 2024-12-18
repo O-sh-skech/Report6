@@ -15,16 +15,21 @@ public class Sample extends Application{
     }
 
     Button button;
+    Stage window;
     
     @Override
     public void start(Stage primaryStage) throws Exception {
-        primaryStage.setTitle("Title of the Window");
+        window = primaryStage;
+        window.setTitle("JavaFx = Thenewboston");
 
-        button = new Button("click me");//ボタン
-        button.setOnAction(e -> {
-            boolean result =ConfirmBox.display("title of window", "are you sure sou want to send pic?");
-            System.out.println(result);
-        });
+        window.setOnCloseRequest(e -> {
+            e.consume();//リクエストを一時中断して、closeProgramを実行
+            closeProgram();
+        });//強制停止してもセーブ　大事
+
+        button = new Button("close program");//ボタン
+        button.setOnAction(e -> closeProgram());//close buttonを押してセーブ
+        
 
         StackPane layout = new StackPane();//レイアウト
         layout.getChildren().add(button);
@@ -35,5 +40,11 @@ public class Sample extends Application{
         primaryStage.show();
 
 
+    }
+
+    private void closeProgram(){
+        Boolean answer = ConfirmBox.display("titile", "Sure you want to exit?");
+        if(answer)//trueなら
+        window.close();
     }
 }
