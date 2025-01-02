@@ -1,16 +1,15 @@
 package jp.ac.uryukyu.ie.e245726;
 
-import javax.swing.BorderFactory;
+
+import java.security.KeyStore.TrustedCertificateEntry;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 
@@ -27,32 +26,40 @@ public class Sample extends Application{
         window = primaryStage;
         window.setTitle("JavaFx = Thenewboston");
 
-        HBox topmenue = new HBox();
-        Button buttonA = new Button("File");
-        Button buttonB = new Button("Edit");
-        Button buttonC = new Button("View");
-        topmenue.getChildren().addAll(buttonA,buttonB,buttonC);
+        GridPane grid = new GridPane();
+        grid.setPadding(new Insets(10,10,10,10));
+        grid.setVgap(1);
+        grid.setHgap(10);
 
-        VBox leftmenue = new VBox();
-        Button buttonD = new Button("D");
-        Button buttonE = new Button("E");
-        Button buttonF = new Button("F");
-        leftmenue.getChildren().addAll(buttonD,buttonE,buttonF);
+        //Home Lavel
+        Label nameLabel = new Label("Username:");
+        GridPane.setConstraints(nameLabel, 0,0);
 
-        BorderPane borderpane = new BorderPane();
-        borderpane.setTop(topmenue);
-        borderpane.setLeft(leftmenue);
+        //Name inut
+        TextField nameInput = new TextField("Bucky");
+        GridPane.setConstraints(nameInput,1,0);//デフォ
 
-        Scene scene = new Scene(borderpane,300,250);//シーン
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        //Name inut
+        Label passLabel = new Label("Password:");
+        GridPane.setConstraints(passLabel,0,1);
+
+        //Password input
+        TextField passInput = new TextField();
+        passInput.setPromptText("password");//プロンプト
+        GridPane.setConstraints(passInput, 1, 1);
+
+        Button loginButton = new Button("log in");
+        GridPane.setConstraints(loginButton, 1, 2);
+
+        grid.getChildren().addAll(nameLabel,nameInput,passLabel,passInput,loginButton);
+
+        Scene scene = new Scene(grid,300,200);
+        
 
 
-    }
+        window.setScene(scene);
+        window.show();
 
-    private void closeProgram(){
-        Boolean answer = ConfirmBox.display("titile", "Sure you want to exit?");
-        if(answer)//trueなら
-        window.close();
+
     }
 }
