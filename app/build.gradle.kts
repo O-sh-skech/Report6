@@ -11,12 +11,12 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.1.0"
 }
 java {                                      
-    sourceCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
     // Use Maven Central for resolving dependencies.
-    mavenCentral()
+    mavenCentral()  // Maven Centralから依存関係を取得
 }
 
 dependencies {
@@ -33,7 +33,6 @@ dependencies {
     implementation("org.openjfx:javafx-fxml:21")
     implementation("org.openjfx:javafx-base:21")
     implementation("org.fxyz3d:fxyz3d:0.6.0") // FXyzの依存関係
-
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
