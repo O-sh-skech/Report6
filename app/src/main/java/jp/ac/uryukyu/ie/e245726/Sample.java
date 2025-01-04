@@ -1,6 +1,10 @@
 package jp.ac.uryukyu.ie.e245726;
 
 
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.input.KeyEvent;
@@ -20,12 +24,12 @@ public class Sample extends Application {
 
 
         // 三角形メッシュを作成
-        TriangleMesh mesh = createSurfaceMesh(50, 50, 20);
+        TriangleMesh mesh = createSurfaceMesh(50, 50, 10);
 
         // Y軸の設定（Cylinderで代用）
         Cylinder axisY = new Cylinder(0.2, 60); // 半径0.2、高さ60のシリンダー（Y軸）
         axisY.setMaterial(new javafx.scene.paint.PhongMaterial(Color.GREEN)); // 緑色に設定
-        axisY.setRotationAxis(Rotate.X_AXIS);
+        axisY.setRotationAxis(Rotate.Y_AXIS);
         axisY.setRotate(90);  // 90度回転させる
 
 
@@ -65,10 +69,10 @@ public class Sample extends Application {
             scene.setOnKeyPressed((KeyEvent event) -> {
         switch (event.getCode()) {
             case UP:
-                rotateX.setAngle(rotateX.getAngle() - 10);
+                rotateX.setAngle(rotateX.getAngle() + 10);
                 break;
             case DOWN:
-                rotateX.setAngle(rotateX.getAngle() + 10);
+                rotateX.setAngle(rotateX.getAngle() - 10);
                 break;
             case LEFT:
                 rotateY.setAngle(rotateY.getAngle() - 10);
@@ -89,19 +93,46 @@ public class Sample extends Application {
      * @param size グリッドのサイズ
      * @return TriangleMesh
      */
-    private TriangleMesh createSurfaceMesh(int rows, int cols, float size) {
+    public TriangleMesh createSurfaceMesh(int rows, int cols, float size) {
         TriangleMesh mesh = new TriangleMesh();
         // 頂点の作成
         float stepX = size / cols;//一目盛り分の大きさ
         float stepY = size / rows;
+        Float max = Float.MIN_VALUE;
+        Float min = Float.MAX_VALUE;
         for (int y = 0; y <= rows; y++) {
             for (int x = 0; x <= cols; x++) {
                 float xPos = x * stepX - size / 2;
                 float yPos = y * stepY - size / 2;
-                float zPos = (float)(xPos*0.1)/(float)(yPos*0.1);// 高さを計算
+                float zPos = (float)(yPos)/(float)(xPos);// 高さを計算
+
+                ArrayList<Float> zArrayList = new ArrayList<>();
+                zArrayList.add(zPos);
+
+                for (Float num : zArrayList) {
+                    if (num.equals(Float.POSITIVE_INFINITY) || num.equals(Float.NEGATIVE_INFINITY) || Float.isNaN(num)) {
+                        if(zPos == Float.POSITIVE_INFINITY){
+                            zPos = max;
+                        }else {
+                            zPos = min;
+                        }
+                        continue;
+                    }
+                    max = Math.max(max, num);
+                    min = Math.min(min, num); // 最大値最小値を更新
+                }
+                if(Float.isNaN(zPos)){
+                    Float NaNPositivePos = max;
+                    Float NaNNegativePos = min;
+                    mesh.getPoints().addAll(xPos, NaNPositivePos, yPos);
+                    mesh.getPoints().addAll(xPos, NaNNegativePos, yPos);
+                    rows = rows+2;
+                    cols = cols+2;
+                    continue;
+                }
+
                 
-                
-                mesh.getPoints().addAll(xPos, yPos, zPos);
+                mesh.getPoints().addAll(xPos, zPos, yPos);
             }
         }
 
