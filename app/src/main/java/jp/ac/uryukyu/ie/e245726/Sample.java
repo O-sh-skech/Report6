@@ -1,61 +1,70 @@
 package jp.ac.uryukyu.ie.e245726;
 
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collections;
 
 import javafx.application.Application;
-import javafx.scene.*;
+import javafx.scene.Group;
+import javafx.scene.PerspectiveCamera;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.scene.SceneAntialiasing;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Cylinder;
 import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.CullFace;
+import javafx.scene.shape.Cylinder;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
-import javafx.stage.Stage;
 import javafx.scene.transform.Rotate;
+import javafx.stage.Stage;
+
 
 public class Sample extends Application {
+
+    Stage primaryStage;
+    Scene scene;
+    Button button;
 
     @Override
     public void start(Stage primaryStage) {
 
-
         // 三角形メッシュを作成
-        TriangleMesh mesh = createSurfaceMesh(50, 50, 10);
+        TriangleMesh meshFront = Mesh.createSurfaceMesh(10,1);
+        TriangleMesh meshBack =  Mesh.createSurfaceMesh(10,0);
+        
 
         // Y軸の設定（Cylinderで代用）
         Cylinder axisY = new Cylinder(0.2, 60); // 半径0.2、高さ60のシリンダー（Y軸）
         axisY.setMaterial(new javafx.scene.paint.PhongMaterial(Color.GREEN)); // 緑色に設定
         axisY.setRotationAxis(Rotate.Y_AXIS);
-        axisY.setRotate(90);  // 90度回転させる
-
+        axisY.setRotate(90); // 90度回転させる
 
         // メッシュをビューにラップ
-        MeshView meshView = new MeshView(mesh);
-        meshView.setCullFace(CullFace.NONE); 
+        MeshView meshFrontView = new MeshView(meshFront);
+        MeshView meshBackView = new MeshView(meshBack);
 
         // メッシュのマテリアル設定
         PhongMaterial material = new PhongMaterial();
         material.setDiffuseColor(Color.LIGHTBLUE); // 明るい青色
         material.setSpecularColor(Color.LIGHTGRAY); // 光沢
-        meshView.setMaterial(material);
+        meshFrontView.setMaterial(material);
+        meshBackView.setMaterial(material);
 
         // カメラ設定
         PerspectiveCamera camera = new PerspectiveCamera(true);
-        camera.setTranslateZ(-50);
+        camera.setTranslateZ(-90);
 
         // シーン設定
         Group cameraGroup = new Group(camera);
-        Group nodeGroup = new Group(meshView, axisY);
-        Group root =  new Group(cameraGroup, nodeGroup);
+        Group nodeGroup = new Group(meshFrontView, axisY);
+        Group root = new Group(cameraGroup, nodeGroup);
         Scene scene = new Scene(root, 800, 600, true, SceneAntialiasing.BALANCED);
         scene.setCamera(camera);
         scene.setFill(Color.SKYBLUE);
 
         // ステージ設定
+        
         primaryStage.setTitle("Simple TriangleMesh Example");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -65,104 +74,27 @@ public class Sample extends Application {
         Rotate rotateY = new Rotate(0, Rotate.Y_AXIS);
         cameraGroup.getTransforms().addAll(rotateX, rotateY);
 
-        //キー入力回転
-            scene.setOnKeyPressed((KeyEvent event) -> {
-        switch (event.getCode()) {
-            case UP:
-                rotateX.setAngle(rotateX.getAngle() + 10);
-                break;
-            case DOWN:
-                rotateX.setAngle(rotateX.getAngle() - 10);
-                break;
-            case LEFT:
-                rotateY.setAngle(rotateY.getAngle() - 10);
-                break;
-            case RIGHT:
-                rotateY.setAngle(rotateY.getAngle() + 10);
-                break;
-            default:
-                break;
-        }
-});
+        // キー入力回転
+        scene.setOnKeyPressed((KeyEvent event) -> {
+            switch (event.getCode()) {
+                case UP:
+                    rotateX.setAngle(rotateX.getAngle() + 10);
+                    break;
+                case DOWN:
+                    rotateX.setAngle(rotateX.getAngle() - 10);
+                    break;
+                case LEFT:
+                    rotateY.setAngle(rotateY.getAngle() - 10);
+                    break;
+                case RIGHT:
+                    rotateY.setAngle(rotateY.getAngle() + 10);
+                    break;
+                default:
+                    break;
+            }
+        });
     }
 
-    /**
-     * TriangleMesh を作成する
-     * @param rows 縦の分割数
-     * @param cols 横の分割数
-     * @param size グリッドのサイズ
-     * @return TriangleMesh
-     */
-    public TriangleMesh createSurfaceMesh(int rows, int cols, float size) {
-        TriangleMesh mesh = new TriangleMesh();
-        // 頂点の作成
-        float stepX = size / cols;//一目盛り分の大きさ
-        float stepY = size / rows;
-        Float max = Float.MIN_VALUE;
-        Float min = Float.MAX_VALUE;
-        for (int y = 0; y <= rows; y++) {
-            for (int x = 0; x <= cols; x++) {
-                float xPos = x * stepX - size / 2;
-                float yPos = y * stepY - size / 2;
-                float zPos = (float)(yPos)/(float)(xPos);// 高さを計算
-
-                ArrayList<Float> zArrayList = new ArrayList<>();
-                zArrayList.add(zPos);
-
-                for (Float num : zArrayList) {
-                    if (num.equals(Float.POSITIVE_INFINITY) || num.equals(Float.NEGATIVE_INFINITY) || Float.isNaN(num)) {
-                        if(zPos == Float.POSITIVE_INFINITY){
-                            zPos = max;
-                        }else {
-                            zPos = min;
-                        }
-                        continue;
-                    }
-                    max = Math.max(max, num);
-                    min = Math.min(min, num); // 最大値最小値を更新
-                }
-                if(Float.isNaN(zPos)){
-                    Float NaNPositivePos = max;
-                    Float NaNNegativePos = min;
-                    mesh.getPoints().addAll(xPos, NaNPositivePos, yPos);
-                    mesh.getPoints().addAll(xPos, NaNNegativePos, yPos);
-                    rows = rows+2;
-                    cols = cols+2;
-                    continue;
-                }
-
-                
-                mesh.getPoints().addAll(xPos, zPos, yPos);
-            }
-        }
-
-        // テクスチャ座標の作成（ダミー）
-        for (int y = 0; y <= rows; y++) {
-            for (int x = 0; x <= cols; x++) {
-                float u = (float) x / cols;
-                float v = (float) y / rows;
-                mesh.getTexCoords().addAll(u, v);
-            }
-        }
-
-        // 三角形の作成
-        for (int y = 0; y < rows; y++) {
-            for (int x = 0; x < cols; x++) {
-                int p00 = y * (cols + 1) + x;
-                int p01 = y * (cols + 1) + x + 1;
-                int p10 = (y + 1) * (cols + 1) + x;
-                int p11 = (y + 1) * (cols + 1) + x + 1;
-
-                // 上の三角形
-                mesh.getFaces().addAll(p00, 0, p10, 0, p01, 0);
-
-                // 下の三角形
-                mesh.getFaces().addAll(p10, 0, p11, 0, p01, 0);
-            }
-        }
-
-        return mesh;
-    }
 
     public static void main(String[] args) {
         launch(args);
