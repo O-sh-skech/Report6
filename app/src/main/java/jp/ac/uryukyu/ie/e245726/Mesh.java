@@ -9,17 +9,17 @@ public class Mesh {
      * @param aspect 面の裏表
      * @return TriangleMesh
      */
-    public static TriangleMesh createSurfaceMesh(int size, int aspect) {//aspectは０（裏）か１（表）
+    public static TriangleMesh createSurfaceMesh(int size, int aspect, String functionText) {//aspectは０（裏）か１（表）
         TriangleMesh mesh = new TriangleMesh();
         // 頂点の作成
         for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ < 80; θ++){
+            for (int θ = 0; θ < 360; θ++){
                 float angle = (float) Math.toRadians(θ);
                 float xPos = r * (float) Math.cos(angle);
                 float yPos = r * (float) Math.sin(angle);
-                float zPos = (float)4*(float)(yPos)/(float)(xPos);// 高さを計算
-
-                mesh.getPoints().addAll(xPos, zPos, yPos);
+                float zPos = (float)FunctionSimpler.simpler(functionText, r, angle).evalf();// 高さを計算
+                //(float)xPos*(float)yPos;
+                mesh.getPoints().addAll(xPos, 4*zPos, yPos);
             }
         }
 
@@ -34,11 +34,11 @@ public class Mesh {
 
         // 三角形の作成
         for (int r = 0; r < size; r++) {
-            for (int θ = 0; θ < 80; θ++) {
-                int p00 = r * 80 + θ;
-                int p01 = r * 80 + (θ + 1)%80;
-                int p10 = (r + 1) * 80 + θ;
-                int p11 = (r + 1) * 80 + (θ + 1)%80;
+            for (int θ = 0; θ < 360; θ++) {
+                int p00 = r * 360 + θ;
+                int p01 = r * 360 + (θ + 1)%360;
+                int p10 = (r + 1) * 360 + θ;
+                int p11 = (r + 1) * 360 + (θ + 1)%360;
 
                 if(aspect == 1){//表面
                     // 上の三角形
@@ -54,10 +54,13 @@ public class Mesh {
                 mesh.getFaces().addAll(p10, 0, p01, 0, p11, 0);
 
                 }
-
-                
             }
         }
         return mesh;
     }
+    public static void main(String[] args) {
+       
+        
+        
+        }
 }

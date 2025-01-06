@@ -35,6 +35,10 @@ dependencies {
     implementation("org.fxyz3d:fxyz3d:0.6.0") // FXyzの依存関係
 
     implementation("org.matheclipse:matheclipse-core:3.0.0")
+
+    implementation("org.apache.logging.log4j:log4j-core:2.23.1") //ロギングに関する警告の回避
+    implementation("org.apache.logging.log4j:log4j-api:2.23.1") 
+    implementation("org.slf4j:slf4j-reload4j:2.0.16") 
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
