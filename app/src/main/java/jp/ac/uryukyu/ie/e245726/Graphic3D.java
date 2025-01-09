@@ -9,8 +9,8 @@ import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
@@ -24,7 +24,7 @@ import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 
-public class Sample extends Application {
+public class Graphic3D extends Application {
 
     Stage primaryStage;
     Scene scene;
@@ -67,13 +67,16 @@ public class Sample extends Application {
         // Y軸の設定（Cylinderで代用）
         Cylinder axisY = new Cylinder(0.2, 60); // 半径0.2、高さ60のシリンダー（Y軸）
         axisY.setMaterial(new javafx.scene.paint.PhongMaterial(Color.GREEN)); // 緑色に設定
-        axisY.setRotationAxis(Rotate.Y_AXIS);
-        axisY.setRotate(90); // 90度回転させる
+        axisY.setRotate(90);
+        // Y軸の設定（Cylinderで代用）
+        Cylinder axisZ = new Cylinder(0.2, 60); // 半径0.2、高さ60のシリンダー（Y軸）
+        axisZ.setMaterial(new javafx.scene.paint.PhongMaterial(Color.RED)); // 緑色に設定
 
         // 三角形メッシュのプロパティ
             // メッシュのマテリアル設定
         PhongMaterial material = new PhongMaterial();
-        material.setDiffuseColor(Color.LIGHTBLUE); // 明るい青色
+        material.setDiffuseMap(new Image(Graphic3D.class.getResourceAsStream("/resources/house.jpeg")));
+        //material.setDiffuseColor(Color.LIGHTBLUE); // 明るい青色
         material.setSpecularColor(Color.LIGHTGRAY); // 光沢
         meshFrontView.setMaterial(material);
         meshBackView.setMaterial(material);
@@ -85,7 +88,7 @@ public class Sample extends Application {
         // シーン設定
             //グループ作成、物体とカメラを分ける
         Group cameraGroup = new Group(camera);
-        Group nodeGroup = new Group(meshFrontView, meshBackView, axisY);
+        Group nodeGroup = new Group(meshFrontView, meshBackView, axisY,axisZ);
         Group root = new Group(cameraGroup, nodeGroup);
             //シーンの詳細設定
         SubScene subScene = new SubScene(root, 700, 400, true,SceneAntialiasing.BALANCED);
