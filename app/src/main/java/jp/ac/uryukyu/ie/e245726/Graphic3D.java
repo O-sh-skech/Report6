@@ -33,13 +33,16 @@ public class Graphic3D extends Application {
     String functionText;
 
     //メッシュの初期化
-    TriangleMesh meshFront = new TriangleMesh();
-    TriangleMesh meshBack = new TriangleMesh();
-    MeshView meshFrontView = new MeshView(meshFront);
-    MeshView meshBackView = new MeshView(meshBack);
 
     @Override
     public void start(Stage primaryStage) {
+        Group meshViewGroup = new Group();
+        // 三角形メッシュのプロパティ
+        // メッシュのマテリアル設定
+        PhongMaterial material = new PhongMaterial();
+        material.setDiffuseMap(new Image(Graphic3D.class.getResourceAsStream("/resources/house.jpeg")));
+        //material.setDiffuseColor(Color.LIGHTBLUE); // 明るい青色
+        material.setSpecularColor(Color.LIGHTGRAY); // 光沢
 
         //テキストフィールド
         TextField functionInput = new TextField();
@@ -50,13 +53,25 @@ public class Graphic3D extends Application {
             if (functionText == null || functionText.trim().isEmpty()) {
                 return;
             }
+            meshViewGroup.getChildren().clear();
+             
             // 三角形メッシュを作成
-            meshFront = Mesh.createSurfaceMesh(10,1, functionText);
-            meshBack =  Mesh.createSurfaceMesh(10,0, functionText);
+            for(int n = 0; n<=1; n ++){
+                for(Mesh surface : CreateMesh.createSurfaceMesh(360,5,n, functionText)){
+                    MeshView meshView = surface.getMeshView();
+                    TriangleMesh mesh = surface.getMesh();
+                    meshView.setMesh(mesh);
+                    meshView.setMaterial(material);
+                    meshViewGroup.getChildren().add(meshView);
+                    System.out.println("Mesh Points Count: " + mesh.getPoints().size());
+                    System.out.println("Mesh TexCoords Count: " + mesh.getTexCoords().size());
+                    System.out.println("Mesh Faces Count: " + mesh.getFaces().size());
 
-            meshFrontView.setMesh(meshFront);
-            meshBackView.setMesh(meshBack);
-
+                }
+            }
+            
+            
+         
             
         });
             //テキストフィールドのレイアウト
@@ -72,14 +87,6 @@ public class Graphic3D extends Application {
         Cylinder axisZ = new Cylinder(0.2, 60); // 半径0.2、高さ60のシリンダー（Y軸）
         axisZ.setMaterial(new javafx.scene.paint.PhongMaterial(Color.RED)); // 緑色に設定
 
-        // 三角形メッシュのプロパティ
-            // メッシュのマテリアル設定
-        PhongMaterial material = new PhongMaterial();
-        material.setDiffuseMap(new Image(Graphic3D.class.getResourceAsStream("/resources/house.jpeg")));
-        //material.setDiffuseColor(Color.LIGHTBLUE); // 明るい青色
-        material.setSpecularColor(Color.LIGHTGRAY); // 光沢
-        meshFrontView.setMaterial(material);
-        meshBackView.setMaterial(material);
 
         // カメラ設定
         PerspectiveCamera camera = new PerspectiveCamera(true);
@@ -88,9 +95,9 @@ public class Graphic3D extends Application {
         // シーン設定
             //グループ作成、物体とカメラを分ける
         Group cameraGroup = new Group(camera);
-        Group nodeGroup = new Group(meshFrontView, meshBackView, axisY,axisZ);
+        Group nodeGroup = new Group(axisY,axisZ,meshViewGroup);
         Group root = new Group(cameraGroup, nodeGroup);
-            //シーンの詳細設定
+            //サブシーンの詳細設定
         SubScene subScene = new SubScene(root, 700, 400, true,SceneAntialiasing.BALANCED);
         subScene.setCamera(camera);
         subScene.setFill(Color.SKYBLUE);
@@ -140,5 +147,6 @@ public class Graphic3D extends Application {
 
     public static void main(String[] args) {
         launch(args);
+
     }
 }

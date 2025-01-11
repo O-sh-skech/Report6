@@ -4,10 +4,9 @@
 package org.example;
 
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.annotation.Testable;
 
 import jp.ac.uryukyu.ie.e245726.FunctionSimpler;
-import jp.ac.uryukyu.ie.e245726.Mesh;
+import jp.ac.uryukyu.ie.e245726.CreateMesh;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,6 +16,8 @@ class Graphic3DTest {
     @Test
     void ListIndexTest(){
         int size = 5;
+        int angle =5;
+
 
         ArrayList<Float[]> NaNPoints2D = new ArrayList<>();
         ArrayList<Integer[]> NaNNumbers2D = new ArrayList<>();
@@ -28,7 +29,7 @@ class Graphic3DTest {
                 
             }
         }
-        for(Integer[][] index : Mesh.NaNIndex(size,zArraylist)){
+        for(Integer[][] index : CreateMesh.NaNIndex(angle,size,zArraylist)){
             for(int e=0; e<4; e++){
             float u = (float)0.5 + (index[0][0]) * (float)Math.cos(index[0][1])/size;
             float v = (float)0.5 + (index[0][0]) * (float)Math.sin(index[0][1])/size;
@@ -38,7 +39,7 @@ class Graphic3DTest {
          }
          for (int r = 0; r <= size; r++) {
             for (int θ = 0; θ <= 360; θ++) {
-                for(Integer[][] index : Mesh.NaNIndex(size,zArraylist)){
+                for(Integer[][] index : CreateMesh.NaNIndex(angle,size,zArraylist)){
                     if(index[0][0]==r && index[0][1]==θ){
                         Integer[] numbers = {r,θ};
                         NaNNumbers2D.add(numbers);
@@ -52,16 +53,17 @@ class Graphic3DTest {
     @Test
     void ListPointsTest(){
         int size = 5;
+        int angle = 5;
 
         ArrayList<Float[]> AllPoints2D = new ArrayList<>();
         ArrayList<Float[]> AllPoints3D = new ArrayList<>();
         ArrayList<Float> zArraylist = new ArrayList<>();
 
         for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ <= 360; θ++){
-                float angle = (float) Math.toRadians(θ);
-                float xPos = r * (float) Math.cos(angle);
-                float yPos = r * (float) Math.sin(angle);
+            for (int θ = 0; θ <= angle; θ++){
+                float radian = (float) Math.toRadians(θ);
+                float xPos = r * (float) Math.cos(radian);
+                float yPos = r * (float) Math.sin(radian);
                 float zPos = (float)FunctionSimpler.simpler("x/y", r, θ).evalf();// 高さを計算
                 zArraylist.add(zPos);// NaNを"含む"リスト
                 if(Float.isNaN(zPos)){// NaNを検出
@@ -78,14 +80,14 @@ class Graphic3DTest {
             }
         }
         for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ <= 360; θ++){
+            for (int θ = 0; θ <= angle; θ++){
            float u = (float)0.5 + (r) * (float)Math.cos(θ)/size+1;
            float v = (float)0.5 + (r) * (float)Math.sin(θ)/size+1;
            Float[] points2D = {u,v};
            AllPoints2D.add(points2D);
            }
         }
-        assertEquals(AllPoints2D.size(),AllPoints3D);//=(size+1)*361
+        assertEquals(AllPoints2D.size(),AllPoints3D.size());//=(size+1)*361
         /*
          * for (int r = 0; r <= size; r++) {
             for (int θ = 0; θ <= 360; θ++){
