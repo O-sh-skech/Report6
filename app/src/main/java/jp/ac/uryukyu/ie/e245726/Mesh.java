@@ -4,8 +4,8 @@ import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
 
 public class Mesh{
-    private TriangleMesh mesh = new TriangleMesh();
-    private MeshView meshView = new MeshView();
+    private TriangleMesh mesh;
+    private MeshView meshView;
 
     Mesh(TriangleMesh mesh, MeshView meshView){
         this.mesh = mesh;

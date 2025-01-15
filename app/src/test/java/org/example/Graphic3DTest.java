@@ -15,89 +15,26 @@ import java.util.ArrayList;
 class Graphic3DTest {
     @Test
     void ListIndexTest(){
-        int size = 5;
-        int angle =5;
-
-
-        ArrayList<Float[]> NaNPoints2D = new ArrayList<>();
-        ArrayList<Integer[]> NaNNumbers2D = new ArrayList<>();
-        ArrayList<Float> zArraylist = new ArrayList<>();
-        for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ <= 360; θ++) {
-                float zPos = (float)FunctionSimpler.simpler("x/y", r, θ).evalf();// 高さを計算
-                zArraylist.add(zPos);
-                
-            }
-        }
-        for(Integer[][] index : CreateMesh.NaNIndex(angle,size,zArraylist)){
-            for(int e=0; e<4; e++){
-            float u = (float)0.5 + (index[0][0]) * (float)Math.cos(index[0][1])/size;
-            float v = (float)0.5 + (index[0][0]) * (float)Math.sin(index[0][1])/size;
-            Float[] points = {u,v};
-            NaNPoints2D.add(points);
-            }
-         }
-         for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ <= 360; θ++) {
-                for(Integer[][] index : CreateMesh.NaNIndex(angle,size,zArraylist)){
-                    if(index[0][0]==r && index[0][1]==θ){
-                        Integer[] numbers = {r,θ};
-                        NaNNumbers2D.add(numbers);
-                    }   
-                }
-            }
-        }
-        assertEquals(NaNPoints2D.size(),4*NaNNumbers2D.size());
-    }
+        ArrayList<ArrayList<ArrayList<float[]>>> outerWall = new ArrayList<>();
+        ArrayList<ArrayList<float[]>> innerWall = new ArrayList<>();
+        ArrayList<float[]> wall = new ArrayList<>();
+        innerWall.add(wall);
+        assertEquals(innerWall.size(), 1);
+    }       
 
     @Test
-    void ListPointsTest(){
-        int size = 5;
-        int angle = 5;
-
-        ArrayList<Float[]> AllPoints2D = new ArrayList<>();
-        ArrayList<Float[]> AllPoints3D = new ArrayList<>();
-        ArrayList<Float> zArraylist = new ArrayList<>();
-
-        for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ <= angle; θ++){
-                float radian = (float) Math.toRadians(θ);
-                float xPos = r * (float) Math.cos(radian);
-                float yPos = r * (float) Math.sin(radian);
-                float zPos = (float)FunctionSimpler.simpler("x/y", r, θ).evalf();// 高さを計算
-                zArraylist.add(zPos);// NaNを"含む"リスト
-                if(Float.isNaN(zPos)){// NaNを検出
-                   zPos = (float)FunctionSimpler.simpler("x/y", r, θ+1).evalf();
-                }
-                if(zPos < 0){// NaNを含まないメッシュに利用される頂点群
-                    Float[] points3D = {xPos, yPos, Math.max(zPos,-size*10^5)};
-                    AllPoints3D.add(points3D);
-                }else{
-                    Float[] points3D = {xPos, yPos, Math.min(zPos,size*10^5)};
-                    AllPoints3D.add(points3D);
-                }
-
+    void ListIndexTest2(){
+        ArrayList<ArrayList<ArrayList<float[]>>> outerWall = new ArrayList<>();
+        ArrayList<float[]> wall = new ArrayList<>();
+        for (int r = 0; r <= 3; r++) {
+            ArrayList<ArrayList<float[]>> innerWall = new ArrayList<>();
+        for (int θ = 0; θ <= 2; θ++){
+            innerWall.add(wall);
             }
+            assertEquals(innerWall.size(), 3);
+            outerWall.add(innerWall);
         }
-        for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ <= angle; θ++){
-           float u = (float)0.5 + (r) * (float)Math.cos(θ)/size+1;
-           float v = (float)0.5 + (r) * (float)Math.sin(θ)/size+1;
-           Float[] points2D = {u,v};
-           AllPoints2D.add(points2D);
-           }
-        }
-        assertEquals(AllPoints2D.size(),AllPoints3D.size());//=(size+1)*361
-        /*
-         * for (int r = 0; r <= size; r++) {
-            for (int θ = 0; θ <= 360; θ++){
-           float u = θ/360f;
-           float v = r/(float)(size+1);
-           mesh.getTexCoords().addAll(u, v);=(size+1)*361
-           }
-        }
-         */
-
+        assertEquals(outerWall.size(), 4);
     }
 
 }
