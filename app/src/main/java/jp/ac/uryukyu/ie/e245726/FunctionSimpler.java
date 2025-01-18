@@ -33,6 +33,7 @@ public class FunctionSimpler {
 
         // function（zPosの式）を設定
         IExpr changed = evaluator.eval("z = " + function);
+
         if(changed.toString().contains("r")){
             if(changed.toString().contains("θ")){
                 functionType = 2;//rとθの関数
@@ -46,12 +47,13 @@ public class FunctionSimpler {
         
 
         // 変数θをSymjaに設定
-         evaluator.eval("angle = " + θ + " Degree");
+        evaluator.eval("angle = " + θ + " Degree");
         // 変数rをSymjaに設定
         evaluator.eval("r ="+ r);
         
             // 結果を取得
         IExpr result = evaluator.eval("z");
+
 
         if (result.toString().equals("ComplexInfinity")) {
             return new FunctionSimpler(functionType,F.num(Double.NaN));
@@ -62,6 +64,7 @@ public class FunctionSimpler {
     public static void main(String[] args) {
     }
 }
+
 
 
     
