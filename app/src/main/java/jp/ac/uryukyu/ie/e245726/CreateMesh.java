@@ -1,17 +1,22 @@
 package jp.ac.uryukyu.ie.e245726;
+
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
-
 import java.util.ArrayList;
 
+/**
+ * 関数グラフィック生成の計算、統合を行います。
+ * 極座標変換された座標系で計算することで、単純化を図っています。
+ */
 public class CreateMesh {
+
     /**
-     * 曲面の最小最大値 を定義する
+     * 関数グラフィックの最小値、最大値を定義します。
      * @param size 円の半径
      * @param zPos f(x,y)の値
-     * @return TriangleMesh
+     * @return float 補正されたf(x,y)の値
      */
-    public static float MaxMinDivider(float zPos, int size){
+    private static float MaxMinDivider(float zPos, int size){
         if(zPos < 0){
             zPos = Math.max(zPos,-size*10^5);
         }else{
@@ -20,11 +25,11 @@ public class CreateMesh {
         return zPos;
     }
     /**
-     * ArrayListの各要素までの要素ArrayListの加算合計を求める
+     * ArrayListの各要素までの要素ArrayListの加算合計を求めます。
      * @param list ArrayList<ArrayList<T>>のリスト
-     * @return ArrayList<Integer>
+     * @return ArrayList<Integer> 加算合計のリスト
      */
-    public static <T> ArrayList<Integer> listIndexSum(ArrayList<ArrayList<T>> list){
+    private static <T> ArrayList<Integer> listIndexSum(ArrayList<ArrayList<T>> list){
         int sum = 0;
         ArrayList<Integer> sumList = new ArrayList<>();
         for (int i = 0; i < list.size()-1; i++) {
@@ -36,30 +41,32 @@ public class CreateMesh {
         }
         return sumList;
     }
-
-        // zPos計算用のヘルパーメソッド
-    //public static float calculateZPos(float r, int θ, String functionText, int size, boolean adjustR) {
-   //     float newR = adjustR ? r + 0.1f : r;
-  //      int newTheta = adjustR ? θ : θ - 1;
-  //      return MaxMinDivider((float) FunctionSimpler.simpler(functionText, newR, newTheta).getResult().evalf(), size);
- //   }
     /**
-     * TriangleMesh を作成する
+     * 関数グラフィックにおけるNaNのfunctionTypeに基づき値を修正します。
+     * @param r,θ　現在の半径と角度の値
+     * @param functionText 任意の関数
+     * @param size 円の半径
+     * @param adjustRθ trueならRがfalseならθがfunctionTypeに基づき修正されます
+     * @return float 補正されたf(x,y)の値
+     */
+    private static float adjustZPos(float r, int θ, String functionText, int size, boolean adjustRθ) {
+        float newR = adjustRθ ? r + 0.1f : r;
+        int newTheta = adjustRθ ? θ : θ - 1;
+        return MaxMinDivider((float) FunctionSimpler.simpler(functionText, newR, newTheta).getResult().evalf(), size);
+    }
+    /**
+     * TriangleMeshに必要なデータを生成します。
      * @param angle 角度
      * @param size 円の半径
-     * @param aspect 面の裏表
      * @param functionText 任意の関数
-     * @return TriangleMesh
+     * @return MeshCalculated メッシュやアニメーション生成に必要な3D空間座標を格納するリスト群
      */
-    public static MeshCreated createSurfaceMesh(int angle, int size, String functionText) {
+    private static MeshCalculated calculateSurfaceMesh(int angle, int size, String functionText) {
         int functionType = FunctionSimpler.simpler(functionText, 0, 0).getFunctionType();
-        ArrayList<Mesh> meshGroup = new ArrayList<>();
         ArrayList<ArrayList<ArrayList<float[]>>> outerWall = new ArrayList<>();
         ArrayList<ArrayList<float[]>> innerWall = new ArrayList<>();
         ArrayList<float[]> wall = new ArrayList<>();
         ArrayList<float[]> otherWall = new ArrayList<>();
-        ArrayList<ArrayList<float[]>> foundMeshList = new ArrayList<>();
-        TriangleMesh foundMesh = new TriangleMesh();
         boolean isNaN = false;
         for (float r = 0; r <= size; r ++) {
             innerWall.clear();
@@ -70,36 +77,22 @@ public class CreateMesh {
                 float zPos = (float)FunctionSimpler.simpler(functionText, r, θ).getResult().evalf();// 高さを計算
                 float u = r/(float)size;
                 float v = θ/(float)angle;          
-                try{
-                    // NaNを検出
-                    if(Float.isNaN(zPos) && functionType != 1){
-                        throw new IllegalArgumentException("zPos is NaN");
-                    }else while(Float.isNaN(zPos)){
-                        if(r == 0){//rの関数
-                            zPos = MaxMinDivider((float)FunctionSimpler.simpler(functionText, r+0.1f, θ).getResult().evalf(),size);
-                        }else{
-                            zPos = MaxMinDivider((float)FunctionSimpler.simpler(functionText, r-0.1f, θ).getResult().evalf(),size);
-                        }}
-                }catch(IllegalArgumentException e){  
-                    if(functionType == 0 ){//θの関数
-                        while(Float.isNaN(zPos)){
-                        zPos = MaxMinDivider((float)FunctionSimpler.simpler(functionText, r, θ-1).getResult().evalf(),size);
-                        }}
-                    if( functionType == 2){//θとrの関数
-                        while(Float.isNaN(zPos)){
-                        if(r == 0){
-                            zPos = MaxMinDivider((float)FunctionSimpler.simpler(functionText, r+0.1f, θ).getResult().evalf(),size);
-                        }else{
-                            zPos = MaxMinDivider((float)FunctionSimpler.simpler(functionText, r, θ-1).getResult().evalf(),size);
-                        }}
+                try {
+                    if (Float.isNaN(zPos)) {// NaNを検出
+                        if (functionType != 1) 
+                            throw new IllegalArgumentException("zPos is NaN");
+                        while (Float.isNaN(zPos)) // functionType == 1 の場合はループ処理
+                            zPos = adjustZPos(r, θ, functionText, size, true);
                     }
-                    isNaN = true;
+                } catch (IllegalArgumentException e) {
+                    while (Float.isNaN(zPos)) {
+                        zPos = adjustZPos(r, θ, functionText, size, functionType == 2 && r == 0);
+                    }isNaN = true;
                     continue;//座標だけは保存される。
                 }finally{
                     float[] xyzPos = {xPos, -zPos , yPos, u, v, r, θ};
-                    if((r==0 || r==5 || r== 10) && θ<=angle){
+                    if((r==0 || r==5 || r== 10) && θ<=angle)
                         otherWall.add(xyzPos);
-                    }
                     wall.add(xyzPos);
                     if(isNaN == true || θ == angle){
                         innerWall.add(new CopyList(wall).getList());
@@ -107,31 +100,40 @@ public class CreateMesh {
                         isNaN = false;
                     }
                 }    
-            }
-            outerWall.add(new CopyList(innerWall).getList());
-        }
-        int n = 0;
-        System.out.println("innerWall.size()は "+ innerWall.size()+" outerWall.size()は " + outerWall.size());
+            }outerWall.add(new CopyList(innerWall).getList());
+        }return new MeshCalculated(outerWall,innerWall,otherWall);
+    }
+    /**
+     * TriangleMesh を作成する
+     * @param angle 角度
+     * @param size 円の半径
+     * @param aspect 面の裏表
+     * @param functionText 任意の関数
+     * @return MeshCreated　3D空間座標の並び方を三角形ごと、時計回りに格納したNode型とアニメーション生成に要求される3D空間座標
+     */
+    public static MeshCreated createSurfaceMesh(int angle, int size, String functionText){
+        ArrayList<Mesh> meshGroup = new ArrayList<>();
+        ArrayList<ArrayList<float[]>> foundMeshList = new ArrayList<>();
+        TriangleMesh foundMesh = new TriangleMesh();
+        MeshCalculated materialMesh = calculateSurfaceMesh(angle, size, functionText);
+        ArrayList<ArrayList<ArrayList<float[]>>>  outerWall = materialMesh.getOuterWall();
+        ArrayList<ArrayList<float[]>> innerWall = materialMesh.getInnerWall();
+        ArrayList<float[]>  otherWall = materialMesh.getOtherWall();
         for(int inner = 0; inner < innerWall.size(); inner ++ ){
             foundMeshList.clear();
             for(int outer = 0; outer < outerWall.size(); outer ++ ){
-                foundMeshList.add(outerWall.get(outer).get(inner));//a0,a1,a2,a3
+                foundMeshList.add(outerWall.get(outer).get(inner)); 
             }
-            for(int i = 0; i< foundMeshList.size(); i ++){//a0
-            
+            for(int i = 0; i< foundMeshList.size(); i ++){ 
                 ArrayList<float[]> xyzPosList = foundMeshList.get(i);
-                System.out.println(xyzPosList.get(0)[0] +" "+ xyzPosList.get(0)[1]+" "+ xyzPosList.get(0)[2]+" は頂点の座標なはず");
-                System.out.println("a0のサイズは "+ xyzPosList.size()+" foundMeshListのサイズは "+ foundMeshList.size() + " outerWall.size()と同じはず");
                 if(xyzPosList.size()<=1){
-                    System.out.println("スキップされた");
                     continue;
                 }
-                for(float[] xyzPos : xyzPosList){//a0の頂点
+                for(float[] xyzPos : xyzPosList){
                     foundMesh.getPoints().addAll(xyzPos[0],xyzPos[1],xyzPos[2]);
                     foundMesh.getTexCoords().addAll(xyzPos[3],xyzPos[4]);
-                    n+=1;
-                }System.out.println("頂点の数 "+n);
-                int wallSize = 0;//a0のサイズ
+                }
+                int wallSize = 0;
                 if(i+1 < foundMeshList.size()){
                 if(foundMeshList.get(i).size() <= foundMeshList.get(i+1).size()){
                     wallSize = foundMeshList.get(i).size();
@@ -139,19 +141,14 @@ public class CreateMesh {
                     wallSize = foundMeshList.get(i+1).size();
                 }}
                 int lineIndex = 0;
-                for(int listIndex : listIndexSum(foundMeshList)){//a0からanまでの加算
+                for(int listIndex : listIndexSum(foundMeshList)){
                     for(int PosIndex=0; PosIndex<wallSize-1; PosIndex++){
-                    
-                        foundMesh.getFaces().addAll(PosIndex+lineIndex,PosIndex+lineIndex, PosIndex+listIndex,PosIndex+listIndex, PosIndex+lineIndex+1,PosIndex+lineIndex+1);//p$0, 0, p$0+xyzPosList$0.size(), 0, p$0+1, 0
-                        foundMesh.getFaces().addAll(PosIndex+lineIndex+1,PosIndex+lineIndex+1, PosIndex+listIndex,PosIndex+listIndex, PosIndex+listIndex+1,PosIndex+listIndex+1);//p$0+1, 0, p$0+xyzPosList$0.size(), 0, p$0+1+xyzPosList$0.size(), 0
-                    
-                        foundMesh.getFaces().addAll(PosIndex+lineIndex,PosIndex+lineIndex, PosIndex+lineIndex+1,PosIndex+lineIndex+1, PosIndex+listIndex,PosIndex+listIndex);//p$0, 0, p$0+xyzPosList$0.size(), 0, p$0+1, 0
-                        foundMesh.getFaces().addAll(PosIndex+lineIndex+1,PosIndex+lineIndex+1, PosIndex+listIndex+1,PosIndex+listIndex+1, PosIndex+listIndex,PosIndex+listIndex);//p$0+1, 0, p$0+xyzPosList$0.size(), 0, p$0+1+xyzPosList$0.size(), 0
-                    
-                    }
-                    lineIndex += wallSize;
+                        foundMesh.getFaces().addAll(PosIndex+lineIndex,PosIndex+lineIndex, PosIndex+listIndex,PosIndex+listIndex, PosIndex+lineIndex+1,PosIndex+lineIndex+1);
+                        foundMesh.getFaces().addAll(PosIndex+lineIndex+1,PosIndex+lineIndex+1, PosIndex+listIndex,PosIndex+listIndex, PosIndex+listIndex+1,PosIndex+listIndex+1);
+                        foundMesh.getFaces().addAll(PosIndex+lineIndex,PosIndex+lineIndex, PosIndex+lineIndex+1,PosIndex+lineIndex+1, PosIndex+listIndex,PosIndex+listIndex);
+                        foundMesh.getFaces().addAll(PosIndex+lineIndex+1,PosIndex+lineIndex+1, PosIndex+listIndex+1,PosIndex+listIndex+1, PosIndex+listIndex,PosIndex+listIndex);
+                    }lineIndex += wallSize;
                 }
-                
             }
             TriangleMesh mesh = new TriangleMesh();
             MeshView meshView = new MeshView();
@@ -162,31 +159,63 @@ public class CreateMesh {
             foundMesh.getFaces().clear();
             foundMesh.getTexCoords().clear();
             foundMesh.getPoints().clear();
-    
-        }
-        return new MeshCreated(meshGroup, otherWall);
+        }return new MeshCreated(meshGroup, otherWall);
     }
+
 }
 
+/**
+ * createSurfaceMeshの戻り値に必要とされます。
+ */
 class MeshCreated{
+
     private ArrayList<Mesh> meshGroup;
     private ArrayList<float[]> otherWall;
-    public MeshCreated(){
-    }
+
     public MeshCreated(ArrayList<Mesh> meshGroup, ArrayList<float[]>  otherWall){
         this.meshGroup = meshGroup;
         this.otherWall = otherWall;
     }
-
     public ArrayList<Mesh> getMeshGroup(){
         return meshGroup;
     }
     public ArrayList<float[]> getOtherWall(){
         return otherWall;
     }
+
 }
 
-class Mesh{
+/**
+ * calculateSurfaceMeshの戻り値に必要とされます。
+ */
+class MeshCalculated{ 
+
+    private ArrayList<ArrayList<ArrayList<float[]>>> outerWall;
+    private ArrayList<ArrayList<float[]>> innerWall;
+    private ArrayList<float[]> otherWall;
+
+    public MeshCalculated(ArrayList<ArrayList<ArrayList<float[]>>> outerWall,ArrayList<ArrayList<float[]>> innerWall,  ArrayList<float[]> otherWall){
+        this.outerWall = outerWall;
+        this.innerWall = innerWall;
+        this.otherWall = otherWall;
+    }
+    public ArrayList<ArrayList<ArrayList<float[]>>> getOuterWall(){
+        return outerWall;
+    }
+    public ArrayList<ArrayList<float[]>> getInnerWall(){
+        return innerWall;
+    }
+    public ArrayList<float[]> getOtherWall(){
+        return otherWall;
+    }
+
+}
+
+/**
+ * NaNで切り離されたメッシュ単位で格納されます。
+ */
+class Mesh{ 
+
     private TriangleMesh mesh;
     private MeshView meshView;
     private ArrayList<float[]> otherWall;
@@ -195,7 +224,6 @@ class Mesh{
         this.mesh = mesh;
         this.meshView = meshView;
     }
-
     public TriangleMesh getMesh(){
         return mesh;
     }
@@ -207,14 +235,19 @@ class Mesh{
     }
 
 }
-class CopyList<T> { // クラスにジェネリクス<T>を追加
+
+/**
+ * リストのコピーを行います。
+ */
+class CopyList<T> { 
+
     private ArrayList<T> list = new ArrayList<>();
 
-    CopyList(ArrayList<T> list) { // コンストラクタでも<T>を使う
-        this.list = new ArrayList<>(list); // 渡されたリストをコピーする
+    CopyList(ArrayList<T> list) {
+        this.list = new ArrayList<>(list); 
     }
-
-    public ArrayList<T> getList() { // リストを取得するメソッド
+    public ArrayList<T> getList() { 
         return list;
     }
+    
 }

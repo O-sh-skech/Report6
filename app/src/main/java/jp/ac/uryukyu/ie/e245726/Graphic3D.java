@@ -1,9 +1,7 @@
 package jp.ac.uryukyu.ie.e245726;
 
-
-
 import java.util.stream.IntStream;
-
+import org.fxyz3d.shapes.primitives.Text3DMesh;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
@@ -11,7 +9,6 @@ import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -21,6 +18,7 @@ import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Cylinder;
@@ -29,28 +27,19 @@ import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
-
 public class Graphic3D extends Application {
 
     private Button button;
     private String functionText;
     private String[] palamate = {"x","y","+","-","×","÷","√","^","e"};
     private String[] inputPalamate = {"x","y","+","-","*","/","Power()","^","E"};
-
-    //メッシュの初期化
-
-    @Override
-    public void start(Stage primaryStage) {
-        
-        // 三角形メッシュのプロパティ
-        Group meshViewGroup = new Group();
-        Group surfaceViewGroup = new Group();
-            // メッシュのマテリアル設定
-        PhongMaterial material = new PhongMaterial();
-        //material.setDiffuseMap(new Image(Graphic3D.class.getResourceAsStream("/resources/house.jpeg")));
-        material.setDiffuseColor(Color.rgb(232, 217, 220)); // 明るい青色
-        material.setSpecularColor(Color.rgb(199, 58, 91)); // 光沢
-
+    /**
+     * ウィンドウのレイアウトを生成します。
+     * @param surfaceViewGroup 生成された関数グラフィック
+     * @param material 関数グラフィックに適応されるテクスチャ
+     * @return VBox VBoxレイアウトを使用しています。
+     */
+    private VBox makingLayout(Group surfaceViewGroup, PhongMaterial material){
         //テキストフィールド
         TextField functionInput = new TextField();
         Button buttonPlay = new Button("PLAY ANIMATION");
@@ -61,15 +50,54 @@ public class Graphic3D extends Application {
         button.setStyle("-fx-background-color:rgb(226, 143, 9);"); 
         button.setOnAction(e-> {
             functionText = functionInput.getText();
-            // 入力が空かどうかを確認
-            if (functionText == null || functionText.trim().isEmpty() ) {
+            if (functionText == null || functionText.trim().isEmpty() ){ //入力が空かどうかを確認
                 return;
             }
-            meshViewGroup.getChildren().clear();
-            surfaceViewGroup.getChildren().clear();
-            System.out.println(functionText);
-            // 三角形メッシュを作成
-            MeshCreated meshCreated = CreateMesh.createSurfaceMesh(360,10, functionText);
+            makingMeshGroup(buttonPlay, surfaceViewGroup, material,360,10);
+              });
+        //テキストフィールドのレイアウト
+        VBox layout = new VBox(10);
+        HBox layoutUI = new HBox(); 
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS); 
+        spacer.setMouseTransparent(true);
+        layout.setPadding(new Insets(20,20,20,20));
+        layoutUI.getChildren().addAll(button);
+            //テキストフィールドの入力ボタン
+        IntStream.range(0, palamate.length).forEach(i -> {
+            Button buttonUI = new Button();
+            buttonUI.setText(palamate[i]);
+            buttonUI.setFocusTraversable(false);
+            buttonUI.setStyle("-fx-background-color:rgb(220, 141, 7);"); 
+            buttonUI.setOnAction(e -> {
+                KeyEvent keyEvent = new KeyEvent( //プログラムでKeyEventを発生させる
+                    KeyEvent.KEY_TYPED,    
+                    inputPalamate[i],               
+                    inputPalamate[i],                     
+                    KeyCode.UNDEFINED,          
+                    false, false, false, false 
+                );
+                functionInput.fireEvent(keyEvent); 
+            });
+            buttonUI.setTranslateX(5*(i+1));
+            layoutUI.getChildren().add(buttonUI);
+        });
+        layoutUI.getChildren().addAll(spacer, buttonPlay);
+        layout.getChildren().addAll(functionInput, layoutUI);
+        return layout;
+    }
+    /**
+     * 生成された関数グラフィックを可視化します
+     * @param buttonPlay アニメーション再生ボタン
+     *  @param surfaceViewGroup 生成された関数グラフィック
+     * @param material 関数グラフィックに適応されるテクスチャ
+     * @param angle 角度
+     * @param size 円の半径
+     */
+    private void makingMeshGroup(Button buttonPlay, Group surfaceViewGroup, PhongMaterial material,int angle,int size){
+        // 三角形メッシュのプロパティ
+        Group meshViewGroup = new Group();
+        MeshCreated meshCreated = CreateMesh.createSurfaceMesh(angle, size, functionText);
             for(Mesh surface : meshCreated.getMeshGroup()){
                 MeshView meshView = surface.getMeshView();
                 TriangleMesh mesh = surface.getMesh();
@@ -80,75 +108,117 @@ public class Graphic3D extends Application {
             surfaceViewGroup.getChildren().add(meshViewGroup);
             buttonPlay.setOnAction(animation ->{
                 surfaceViewGroup.getChildren().clear();
-                surfaceViewGroup.getChildren().add(CreateAnimation.Animation(meshCreated.getOtherWall(),meshCreated.getMeshGroup(),surfaceViewGroup,meshViewGroup));
+                surfaceViewGroup.getChildren().add(CreateAnimation.Animation(meshCreated.getOtherWall(),surfaceViewGroup,meshViewGroup));
             });
-            
-            
+    }
+    /**
+     * 基底を生成します。
+     * @param XYZ 基底軸(XかYかZ)
+     * @return Cylinder 円柱で基底軸が表現されます。
+     */
+    private Group makingAxis(String XYZ){
+        Group axisGroup = new Group();
+        Cylinder axis = new Cylinder(0.2, 60);
+        if(XYZ == "X"){
+        //X軸
+        Text3DMesh text3D = new Text3DMesh("x","",5,false,0.1,0,0);
+        text3D.setTranslateX(30);
+        text3D.setTranslateY(0);
+        axis.setMaterial(new PhongMaterial(Color.rgb(8, 39, 88)));
+        axis.setRotationAxis(javafx.geometry.Point3D.ZERO.add(0, 0, 1)); 
+        axis.setRotate(90); 
+        axisGroup.getChildren().addAll(axis,text3D);
+        }
+        if(XYZ == "Y"){
+        //Y軸 
+        axis.setMaterial(new PhongMaterial(Color.rgb(241, 13, 123)));
+        axisGroup.getChildren().addAll(axis);
+        }
+        if(XYZ == "Z"){
+        //Z軸
+        Text3DMesh text3D = new Text3DMesh("y","Arial",6,false,0.1,0,0);
+        text3D.setTranslateZ(-30);
+        text3D.setTranslateY(0);
+        text3D.setRotationAxis(javafx.geometry.Point3D.ZERO.add(0, 1, 0));
+        text3D.setRotate(90);
+        axis.setMaterial(new PhongMaterial(Color.rgb(8, 37, 80)));
+        axis.setRotationAxis(javafx.geometry.Point3D.ZERO.add(1, 0, 0)); 
+        axis.setRotate(90); 
+        axisGroup.getChildren().addAll(axis,text3D);
+        }
+        return axisGroup;
+    }
+    /**
+     * 回転UIを生成します。
+     * @param cameraGroup カメラ系
+     * @param scene ウィンドウ
+     * @param rotateX 相対軸x
+     * @param rotateY 相対軸y
+     */
+    private void makingUI(Group cameraGroup,Scene scene,Rotate rotateX,Rotate rotateY){
+        
+        cameraGroup.getTransforms().addAll(rotateX, rotateY);
+            // キー入力回転
+        scene.setOnKeyPressed((KeyEvent event) -> {
+            int n = adjustAxis(rotateX, rotateY);
+            switch (event.getCode()) {
+                case UP:
+                    rotateX.setAngle((rotateX.getAngle() + n*10)%360);
+                    break;
+                case DOWN:
+                    rotateX.setAngle((rotateX.getAngle() - n*10)%360);
+                    break;
+                case LEFT:
+                    rotateY.setAngle((rotateY.getAngle() - 10)%360);
+                    break;
+                case RIGHT:
+                    rotateY.setAngle((rotateY.getAngle() + 10)%360);
+                    break;
+                default:
+                    break;
+            }
         });
-        
-            //テキストフィールドのレイアウト
-        VBox layout = new VBox(10);
-        HBox layoutUI = new HBox();//レイアウト
-        
-        // 空の Region を作成
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS); // spacer が残りのスペースを占有するように設定
-        spacer.setMouseTransparent(true);
-        
-        layout.setPadding(new Insets(20,20,20,20));
-        layoutUI.getChildren().addAll(button);
-            //テキストフィールドの入力ボタン
-        IntStream.range(0, palamate.length).forEach(i -> {
-            Button buttonUI = new Button();
-            buttonUI.setText(palamate[i]);
-            buttonUI.setFocusTraversable(false);
-            buttonUI.setStyle("-fx-background-color:rgb(220, 141, 7);"); 
-            buttonUI.setOnAction(e -> {
-            // プログラムでKeyEventを発生させる
-                KeyEvent keyEvent = new KeyEvent(
-                    KeyEvent.KEY_TYPED,    // イベントタイプ
-                    inputPalamate[i],               // 文字（必要なら入力内容）
-                    inputPalamate[i],                     // テキスト
-                    KeyCode.UNDEFINED,          // キーコード（例: ENTER）
-                    false, false, false, false // 修飾キー（Shift, Ctrl, Alt, Meta）
-                );
-                functionInput.fireEvent(keyEvent); // イベントをトリガー
+        scene.setOnMousePressed((MouseEvent pressMe) -> {
+            scene.setOnMouseDragged((MouseEvent draggMe) -> {
+                int n = adjustAxis(rotateX, rotateY);
+                rotateX.setAngle(rotateX.getAngle() - n*(draggMe.getSceneY()-pressMe.getSceneY())/50);    
+                rotateY.setAngle(rotateY.getAngle() + (draggMe.getSceneX()-pressMe.getSceneX())/50); 
             });
-            buttonUI.setTranslateX(5*(i+1));//ボタンをずらす
-            layoutUI.getChildren().add(buttonUI);//ボタン
         });
-        layoutUI.getChildren().addAll(spacer, buttonPlay);
-        layout.getChildren().addAll(functionInput, layoutUI);
-
-
-
-        // X軸 (Z軸周りに90度回転)
-        Cylinder axisX = new Cylinder(0.2, 60);
-        axisX.setMaterial(new PhongMaterial(Color.rgb(8, 39, 88)));
-        axisX.setRotationAxis(javafx.geometry.Point3D.ZERO.add(0, 0, 1)); // Y軸周りに回転
-        axisX.setRotate(90); // 90度回転
-
-        // Y軸 
-        Cylinder axisZ = new Cylinder(0.2, 60); // 半径0.2, 高さ60
-        axisZ.setMaterial(new PhongMaterial(Color.rgb(241, 13, 123)));
-
-        // Z軸 (X軸周りに90度回転)
-        Cylinder axisY = new Cylinder(0.2, 60);
-        axisY.setMaterial(new PhongMaterial(Color.rgb(8, 37, 80)));
-        axisY.setRotationAxis(javafx.geometry.Point3D.ZERO.add(1, 0, 0)); // X軸周りに回転
-        axisY.setRotate(90); // 90度回転
-
+    }
+    /**
+     * makingUIのヘルパーメソッドです。
+     * @return int 3D空間内での移動に対して回転が相対的に行われるように補正します。
+     */
+    private int adjustAxis(Rotate rotateX,Rotate rotateY){
+        int n=1;
+            if(rotateY.getAngle()>=0 && rotateY.getAngle()<90 || rotateY.getAngle()>=270 && rotateY.getAngle()<360)
+                n = 1;
+            else if (rotateY.getAngle()>=90 && rotateY.getAngle()<270)
+                n = -1;
+        return n;
+    }
+    /**
+     * ウィンドウを生成します。
+     */
+    @Override
+    public void start(Stage primaryStage) {
         
-
-
-        // カメラ設定
+        //三角形メッシュのプロパティ
+        Group surfaceViewGroup = new Group();
+            //メッシュのマテリアル設定
+        PhongMaterial material = new PhongMaterial();
+        //material.setDiffuseMap(new Image(Graphic3D.class.getResourceAsStream("/resources/house.jpeg"))); //画像を選択できます。現在resourcesには""house"の画像が用意されています。
+        material.setDiffuseColor(Color.rgb(232, 217, 220)); 
+        material.setSpecularColor(Color.rgb(199, 58, 91)); 
+        VBox layout = makingLayout(surfaceViewGroup, material);
+        //カメラ設定
         PerspectiveCamera camera = new PerspectiveCamera(true);
         camera.setTranslateZ(-90);
-
-        // シーン設定
+        //シーン設定
             //グループ作成、物体とカメラを分ける
         Group cameraGroup = new Group(camera);
-        Group nodeGroup = new Group(axisX,axisY,axisZ,surfaceViewGroup);
+        Group nodeGroup = new Group(makingAxis("X"),makingAxis("Y"),makingAxis("Z"),surfaceViewGroup);
         Group root = new Group(cameraGroup, nodeGroup);
             //サブシーンの詳細設定
         SubScene subScene = new SubScene(root, 700, 400, true,SceneAntialiasing.BALANCED);
@@ -167,38 +237,16 @@ public class Graphic3D extends Application {
         StackPane stackPane = new StackPane();
         stackPane.getChildren().addAll(subScene,layout);
         stackPane.setStyle("-fx-background-color:rgb(27, 44, 51);"); 
-            // ステージ設定
+            //ステージ設定
         Scene scene = new Scene(stackPane, 800 , 600);
         scene.setFill(Color.rgb(6, 40, 72));
         primaryStage.setTitle("SURFACE GRAPHIC 3D");
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        // 回転
+        //回転
         Rotate rotateX = new Rotate(0, Rotate.X_AXIS);
         Rotate rotateY = new Rotate(0, Rotate.Y_AXIS);
-        cameraGroup.getTransforms().addAll(rotateX, rotateY);
-            // キー入力回転
-        scene.setOnKeyPressed((KeyEvent event) -> {
-            switch (event.getCode()) {
-                case UP:
-                    rotateX.setAngle(rotateX.getAngle() + 10);
-                    break;
-                case DOWN:
-                    rotateX.setAngle(rotateX.getAngle() - 10);
-                    break;
-                case LEFT:
-                    rotateY.setAngle(rotateY.getAngle() - 10);
-                    break;
-                case RIGHT:
-                    rotateY.setAngle(rotateY.getAngle() + 10);
-                    break;
-                default:
-                    break;
-            }
-        });
+        makingUI(cameraGroup, scene, rotateX, rotateY);
     }
 
-
-   
 }

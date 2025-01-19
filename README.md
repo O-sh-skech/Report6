@@ -7,3 +7,4 @@
 5th commit θ方向の発散でメッシュを分割できるようにした。r方向は未実装。
 6th commit θ,r方向ともに実装。3Dは完成した。
 7th commit UIを整えて、アニメーションを追加してみた。
+8th commit x,yの文字を挿入、回転UIを修正、javaDocを整理した。
