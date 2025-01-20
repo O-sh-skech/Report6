@@ -4,8 +4,6 @@ package jp.ac.uryukyu.ie.e245726;
  */
 import org.junit.jupiter.api.Test;
 import java.lang.reflect.Method;
-import jp.ac.uryukyu.ie.e245726.FunctionSimpler;
-import jp.ac.uryukyu.ie.e245726.CreateMesh;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 

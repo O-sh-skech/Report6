@@ -7,8 +7,10 @@
 
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
+    id("java")
     id("application")
     id("org.openjfx.javafxplugin") version "0.1.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 java {                                      
     sourceCompatibility = JavaVersion.VERSION_21
@@ -50,17 +52,45 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "jp.ac.uryukyu.ie.e245726"
+    mainClass.set("jp.ac.uryukyu.ie.e245726.Main")
     applicationDefaultJvmArgs = listOf(
         "--add-modules=javafx.controls,javafx.graphics,javafx.fxml"
     )
 }
 
 javafx {
-    modules = listOf("javafx.controls")
+    version = "23.0.1"
+    modules = listOf("javafx.controls", "javafx.fxml","javafx.graphics")
 }
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+tasks.named<JavaExec>("run") {
+    jvmArgs(
+        "--module-path", "/Users/uta/Downloads/javafx-sdk-23.0.1/lib",//パス
+        "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics"
+    )
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+            "Main-Class" to "jp.ac.uryukyu.ie.e245726.Main", // Mainクラスを指定
+            "Class-Path" to "/Users/uta/Downloads/javafx-sdk-23.0.1/lib/" // JavaFXライブラリのパス
+        )
+    }
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveBaseName.set("app")
+    archiveClassifier.set("") // クラス名を設定しない
+    archiveVersion.set("")    // バージョンを含めない
+    manifest {
+        attributes(
+            "Main-Class" to "jp.ac.uryukyu.ie.e245726.Main"
+        )
+    }
 }

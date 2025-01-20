@@ -79,14 +79,15 @@ public class CreateMesh {
                 float v = θ/(float)angle;          
                 try {
                     if (Float.isNaN(zPos)) {// NaNを検出
-                        if (functionType != 1) 
+                        if (functionType != 1 && (functionType != 2 || r != 0)){ 
                             throw new IllegalArgumentException("zPos is NaN");
-                        while (Float.isNaN(zPos)) // functionType == 1 の場合はループ処理
+                        }else while (Float.isNaN(zPos)) {// functionType == 1 の場合はループ処理
                             zPos = adjustZPos(r, θ, functionText, size, true);
+                        }
                     }
                 } catch (IllegalArgumentException e) {
                     while (Float.isNaN(zPos)) {
-                        zPos = adjustZPos(r, θ, functionText, size, functionType == 2 && r == 0);
+                        zPos = adjustZPos(r, θ, functionText, size, false);
                     }isNaN = true;
                     continue;//座標だけは保存される。
                 }finally{
@@ -107,7 +108,6 @@ public class CreateMesh {
      * TriangleMesh を作成する
      * @param angle 角度
      * @param size 円の半径
-     * @param aspect 面の裏表
      * @param functionText 任意の関数
      * @return MeshCreated　3D空間座標の並び方を三角形ごと、時計回りに格納したNode型とアニメーション生成に要求される3D空間座標
      */
@@ -249,5 +249,5 @@ class CopyList<T> {
     public ArrayList<T> getList() { 
         return list;
     }
-    
+
 }

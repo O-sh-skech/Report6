@@ -27,6 +27,9 @@ import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
+/**
+ * ウィンドウのレイアウトを各機能ごとにメソッド単位で管理します。
+ */
 public class Graphic3D extends Application {
 
     private Button button;
@@ -97,19 +100,20 @@ public class Graphic3D extends Application {
     private void makingMeshGroup(Button buttonPlay, Group surfaceViewGroup, PhongMaterial material,int angle,int size){
         // 三角形メッシュのプロパティ
         Group meshViewGroup = new Group();
+        surfaceViewGroup.getChildren().clear();
         MeshCreated meshCreated = CreateMesh.createSurfaceMesh(angle, size, functionText);
-            for(Mesh surface : meshCreated.getMeshGroup()){
-                MeshView meshView = surface.getMeshView();
-                TriangleMesh mesh = surface.getMesh();
-                meshView.setMesh(mesh);
-                meshView.setMaterial(material);
-                meshViewGroup.getChildren().add(meshView);
-                }
-            surfaceViewGroup.getChildren().add(meshViewGroup);
-            buttonPlay.setOnAction(animation ->{
-                surfaceViewGroup.getChildren().clear();
-                surfaceViewGroup.getChildren().add(CreateAnimation.Animation(meshCreated.getOtherWall(),surfaceViewGroup,meshViewGroup));
-            });
+        for(Mesh surface : meshCreated.getMeshGroup()){
+            MeshView meshView = surface.getMeshView();
+            TriangleMesh mesh = surface.getMesh();
+            meshView.setMesh(mesh);
+            meshView.setMaterial(material);
+            meshViewGroup.getChildren().add(meshView);
+            }
+        surfaceViewGroup.getChildren().add(meshViewGroup);
+        buttonPlay.setOnAction(animation ->{
+            surfaceViewGroup.getChildren().clear();
+            surfaceViewGroup.getChildren().add(CreateAnimation.Animation(meshCreated.getOtherWall(),surfaceViewGroup,meshViewGroup));
+        });
     }
     /**
      * 基底を生成します。
@@ -122,7 +126,7 @@ public class Graphic3D extends Application {
         if(XYZ == "X"){
         //X軸
         Text3DMesh text3D = new Text3DMesh("x","",5,false,0.1,0,0);
-        text3D.setTranslateX(30);
+        text3D.setTranslateX(-30);
         text3D.setTranslateY(0);
         axis.setMaterial(new PhongMaterial(Color.rgb(8, 39, 88)));
         axis.setRotationAxis(javafx.geometry.Point3D.ZERO.add(0, 0, 1)); 
@@ -137,7 +141,7 @@ public class Graphic3D extends Application {
         if(XYZ == "Z"){
         //Z軸
         Text3DMesh text3D = new Text3DMesh("y","Arial",6,false,0.1,0,0);
-        text3D.setTranslateZ(-30);
+        text3D.setTranslateZ(30);
         text3D.setTranslateY(0);
         text3D.setRotationAxis(javafx.geometry.Point3D.ZERO.add(0, 1, 0));
         text3D.setRotate(90);

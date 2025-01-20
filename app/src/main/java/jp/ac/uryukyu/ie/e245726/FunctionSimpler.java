@@ -37,13 +37,14 @@ public class FunctionSimpler {
         evaluator.eval("y = r * sin(angle)");
         //function（zPosの式）を設定
         IExpr changed = evaluator.eval("z = " + functionText);
+        //System.out.println(changed);
         if(changed.toString().contains("r")){
-            if(changed.toString().contains("θ")){
+            if(changed.toString().contains("angle")){
                 functionType = 2; //rとθの関数
             }else{
                 functionType =1; //rの関数
             }
-        }else if(changed.toString().contains("θ")){
+        }else if(changed.toString().contains("angle")){
             functionType = 0; //θの関数
         }
         //変数θをSymjaに設定
@@ -52,15 +53,22 @@ public class FunctionSimpler {
         evaluator.eval("r ="+ r);
         //結果を取得
         IExpr result = evaluator.eval("z");
-
         if (result.toString().equals("ComplexInfinity")) {
             return new FunctionSimpler(functionType,F.num(Double.NaN));
         }else{
             return new FunctionSimpler(functionType,result);
         }
     }
+
+
     
+        public static void main(String[] args) {
+      
+    }
 }
+    
+    
+
 
 
 
