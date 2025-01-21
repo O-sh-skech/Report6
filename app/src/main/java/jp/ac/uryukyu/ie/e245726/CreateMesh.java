@@ -49,10 +49,42 @@ public class CreateMesh {
      * @param adjustRθ trueならRがfalseならθがfunctionTypeに基づき修正されます
      * @return float 補正されたf(x,y)の値
      */
-    private static float adjustZPos(float r, int θ, String functionText, int size, boolean adjustRθ) {
-        float newR = adjustRθ ? r + 0.1f : r;
-        int newTheta = adjustRθ ? θ : θ - 1;
-        return MaxMinDivider((float) FunctionSimpler.simpler(functionText, newR, newTheta).getResult().evalf(), size);
+    private static float adjustZPos(float r, int θ, String functionText, int functionType, int size, boolean adjustR, boolean adjustθ) {
+        float newR = adjustR ? r + 0.1f : r;
+        int newTheta = adjustθ ? θ - 1 : θ ;
+        float newZPos=MaxMinDivider((float) FunctionSimpler.simpler(functionText, newR, newTheta).getResult().evalf(), size);
+        if(Float.isNaN(newZPos)){
+            if(functionType==1)
+                adjustZPos( newR, newTheta, functionText, functionType, size, true, false);
+            if(functionType==2)
+                adjustZPos(newR, newTheta, functionText, functionType, size, false, true);
+                throw new IllegalArgumentException("zPos is NaN");
+        }
+        return newZPos;
+    }
+    /**
+     * 関数グラフィックにおけるNaNのうち、rの関数でrが0でない場合にのみ値を修正しリストを生成します。
+     * @param r　現在の半径
+     * @param functionText 任意の関数
+     * @param angle 角度
+     * @param size 円の半径
+     * @return ArrayList<ArrayList<float[]>> 補正されたf(x,y)の値のリスト
+     */
+    private static ArrayList<ArrayList<float[]>> adjustWall(float r, String functionText,int angle,int size){
+        ArrayList<float[]> wall = new ArrayList<>();
+        ArrayList<ArrayList<float[]>> innerWall = new ArrayList<>();
+        for (int θ = 0; θ <= angle; θ++){
+            float radian = (float) Math.toRadians(θ);
+            float xPos = (r-0.1f) * (float) Math.cos(radian);
+            float yPos = (r-0.1f) * (float) Math.sin(radian);
+            float zPos = (float)FunctionSimpler.simpler(functionText, (r-0.1f), θ).getResult().evalf();// 高さを計算
+            float u = (r-0.1f)/(float)size;
+            float v = θ/(float)angle;          
+            float[] xyzPos = {xPos, -zPos , yPos, u, v, r, θ};
+            wall.add(xyzPos);
+            innerWall.add(wall);
+        }
+        return innerWall;
     }
     /**
      * TriangleMeshに必要なデータを生成します。
@@ -78,18 +110,18 @@ public class CreateMesh {
                 float u = r/(float)size;
                 float v = θ/(float)angle;          
                 try {
-                    if (Float.isNaN(zPos)) {// NaNを検出
-                        if (functionType != 1 && (functionType != 2 || r != 0)){ 
+                    if (Float.isNaN(zPos)) { //NaNを検出
+                        if (functionType != 1 && (functionType != 2 || r != 0)){
+                            zPos = adjustZPos(r, θ, functionText, functionType, size, false, true);
                             throw new IllegalArgumentException("zPos is NaN");
-                        }else while (Float.isNaN(zPos)) {// functionType == 1 の場合はループ処理
-                            zPos = adjustZPos(r, θ, functionText, size, true);
-                        }
-                    }
-                } catch (IllegalArgumentException e) {
-                    while (Float.isNaN(zPos)) {
-                        zPos = adjustZPos(r, θ, functionText, size, false);
-                    }isNaN = true;
-                    continue;//座標だけは保存される。
+                        }else if (Float.isNaN(zPos)) {
+                            if(functionType==1 && r != 0 && θ == 0)
+                                outerWall.add(new CopyList(adjustWall(radian, functionText, angle, size)).getList());
+                            zPos = adjustZPos(r, θ, functionText, functionType, size, true, false);
+                    }}
+                }catch (IllegalArgumentException e) {
+                    isNaN = true;
+                    continue;
                 }finally{
                     float[] xyzPos = {xPos, -zPos , yPos, u, v, r, θ};
                     if((r==0 || r==5 || r== 10) && θ<=angle)
@@ -160,6 +192,11 @@ public class CreateMesh {
             foundMesh.getTexCoords().clear();
             foundMesh.getPoints().clear();
         }return new MeshCreated(meshGroup, otherWall);
+    }
+
+
+    public static void main(String[] args) {
+        //adjustZPos(0.0f, 136, "1/(x+y)", 10, true, true);
     }
 
 }

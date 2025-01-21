@@ -37,11 +37,11 @@ class Graphic3DTest {
             CreateMesh calculator = new CreateMesh();
     
             // private メソッドを取得
-            Method method = CreateMesh.class.getDeclaredMethod("adjustZPos", float.class, int.class, String.class, int.class, boolean.class);
+            Method method = CreateMesh.class.getDeclaredMethod("adjustZPos", float.class, int.class, String.class, int.class, int.class, boolean.class, boolean.class);
             method.setAccessible(true); // private アクセスを許可
     
             // private メソッドを実行
-            float result = (float) method.invoke(calculator,0,0,"x/y",2,false);
+            float result = (float) method.invoke(calculator,0,0,"x/y",0,2,false,true);
             float compared = (float)FunctionSimpler.simpler("x/y", 0, 0-1).getResult().evalf();
             assertEquals(result, Math.max(compared,-2*10^5));
         }
